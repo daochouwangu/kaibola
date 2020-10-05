@@ -4,11 +4,8 @@ let uid = -1;
 async function hyFetch() {
   if (uid === -1) {
     uid = await new Promise((resolve) => {
-      chrome.cookies.getAll({domain: ".huya.com", name: "udb_uid"},(uids)=>{
-        if (uids.length === 0) {
-          resolve(0);
-        }
-        resolve(uids[0].value);
+      fetch("https://www.huya.com/udb_web/checkLogin.php").then(data => data.json()).then(data => {
+        uid = data.uid
       })
     })
   }
