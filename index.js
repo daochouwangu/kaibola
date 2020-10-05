@@ -41,7 +41,6 @@ async function run(delay = 10000) {
     }
     unread += openRooms.length;
     renderBadge();
-    emitDataUpdateEvent();
     await sleep(delay);
     isFirst = false;
   }
