@@ -5,7 +5,7 @@ async function hyFetch() {
   if (uid === -1) {
     uid = await new Promise((resolve) => {
       fetch("https://www.huya.com/udb_web/checkLogin.php").then(data => data.json()).then(data => {
-        uid = data.uid
+        resolve(data.uid)
       })
     })
   }
