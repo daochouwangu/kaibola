@@ -18,7 +18,7 @@ function renderData(data) {
 function renderDoms(container, type, data) {
   let h = document.createElement("h1");
   switch(type){
-    case "bili": h.textContent = "哔哩哔哩";break;
+    case "bili": h.textContent = "哔哩哔哩（仅特殊关注）";break;
     case "huya": h.textContent = "虎牙";break;
     case "douyu": h.textContent = "斗鱼";break;
   }
