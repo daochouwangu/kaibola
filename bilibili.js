@@ -46,7 +46,7 @@ function biliFilter(data) {
     showTime: live_time,
     roomId: room_id,
     isOpen: live_status === 1,
-    //url: link,
+    url: "https://live.bilibili.com/"+room_id,
     roomName: title,
     nickName: uname,
     snapshot: keyframe
