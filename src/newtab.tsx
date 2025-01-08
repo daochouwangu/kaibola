@@ -12,6 +12,7 @@ import { dyFetch } from "./fetcher/douyu"
 import "./style.css"
 import "./main.css"
 
+import { HiddenRooms } from "~components/HiddenRooms"
 import { RichRoom } from "~components/RichRoom"
 
 const storage = new Storage({
@@ -26,18 +27,26 @@ function IndexNewtab() {
     key: "hidden_rooms",
     instance: storage
   })
+  const [showHidden, setShowHidden] = useState(false)
 
   const addToHidden = async (id: string) => {
-    console.log("Adding to hidden:", id)
     const currentList = (await storage.get<string[]>("hidden_rooms")) || []
-    console.log("Current hiddenList from storage:", currentList)
 
     const newList = [...currentList, id]
-    console.log("New hiddenList will be:", newList)
 
     await storage.set("hidden_rooms", newList)
     setHiddenList(newList)
   }
+
+  const removeFromHidden = async (id: string) => {
+    const currentList = (await storage.get<string[]>("hidden_rooms")) || []
+    const newList = currentList.filter((roomId) => roomId !== id)
+    await storage.set("hidden_rooms", newList)
+    setHiddenList(newList)
+  }
+
+  const hiddenRooms = data.filter((room) => hiddenList?.includes(room.roomId))
+  const hiddenLiveCount = hiddenRooms.filter((room) => room.isOpen).length
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,7 +81,6 @@ function IndexNewtab() {
 
   const openedRooms = data.filter((v) => {
     const isHidden = hiddenList?.includes(v.roomId)
-    console.log(`Room ${v.roomId} isHidden:`, isHidden)
     return v.isOpen && !isHidden
   })
 
@@ -86,11 +94,32 @@ function IndexNewtab() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+      {hiddenRooms.length > 0 && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowHidden(true)}
+            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            管理隐藏直播间
+            {hiddenLiveCount > 0 && (
+              <span className="ml-1 text-gray-500">({hiddenLiveCount})</span>
+            )}
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {openedRooms.map((item) => (
           <RichRoom room={item} key={item.roomId} addToHidden={addToHidden} />
         ))}
       </div>
+
+      {showHidden && (
+        <HiddenRooms
+          rooms={hiddenRooms}
+          onUnhide={removeFromHidden}
+          onClose={() => setShowHidden(false)}
+        />
+      )}
     </div>
   )
 }
