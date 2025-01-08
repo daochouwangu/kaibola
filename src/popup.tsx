@@ -10,6 +10,7 @@ import type { Room } from "~types/Room"
 
 import { biliFetch } from "./fetcher/bilibili"
 import { dyFetch } from "./fetcher/douyu"
+import { hyFetch } from "./fetcher/huya"
 
 import "./main.css"
 
@@ -64,7 +65,11 @@ function IndexPopup() {
           setHiddenList(savedHiddenList)
         }
 
-        const [dy, bili] = await Promise.allSettled([dyFetch(), biliFetch()])
+        const [dy, bili, hy] = await Promise.allSettled([
+          dyFetch(),
+          biliFetch(),
+          hyFetch()
+        ])
         const res = []
         const errors: NotLoginError[] = []
 
@@ -84,6 +89,15 @@ function IndexPopup() {
             errors.push(bili.reason)
           } else {
             console.warn("获取B站数据失败:", bili.reason)
+          }
+        }
+        if (hy.status === "fulfilled") {
+          res.push(...hy.value)
+        } else {
+          if (hy.reason instanceof NotLoginError) {
+            errors.push(hy.reason)
+          } else {
+            console.warn("获取虎牙数据失败:", hy.reason)
           }
         }
         setLoginErrors(errors)

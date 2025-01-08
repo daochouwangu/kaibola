@@ -1,27 +1,35 @@
+import { NotLoginError } from "~types/errors"
 import type { Room } from "~types/Room"
 
 const url = "https://fw.huya.com/dispatch?do=subscribeList&uid="
 const urlPrefix = "https://www.huya.com/"
 let uid = -1
 async function hyFetch(): Promise<Room[]> {
-  if (uid === -1) {
-    uid = await new Promise((resolve) => {
-      fetch("https://www.huya.com/udb_web/checkLogin.php")
-        .then((data) => data.json())
-        .then((data) => {
-          resolve(data.uid)
-        })
-    })
+  try {
+    if (uid === -1) {
+      const loginCheck = await fetch(
+        "https://www.huya.com/udb_web/checkLogin.php"
+      ).then((data) => data.json())
+
+      if (!loginCheck.isLogined) {
+        throw new NotLoginError("huya", "https://www.huya.com/")
+      }
+      uid = loginCheck.uid
+    }
+
+    if (uid === 0) return []
+
+    return fetch(url + uid)
+      .then((res) => res.json())
+      .then(hyFilter)
+  } catch (error) {
+    if (error instanceof NotLoginError) {
+      throw error
+    }
+    console.error("获取虎牙数据失败")
+    console.error(error)
+    return []
   }
-  if (uid === 0) return []
-  return fetch(url + uid)
-    .then((res) => res.json())
-    .then(hyFilter)
-    .catch((error) => {
-      console.error("获取虎牙数据失败")
-      console.error(error)
-      return []
-    })
 }
 function hyFilter(data): Room[] {
   /**
@@ -40,15 +48,18 @@ function hyFilter(data): Room[] {
   }
   let list = data.result.list
   return list.map(
-    ({ startTime, profileRoom, isLive, intro, nick, screenshot }) => ({
-      showTime: startTime,
-      roomId: profileRoom,
-      isOpen: isLive,
-      url: urlPrefix + profileRoom,
-      roomName: intro,
-      nickName: nick,
-      snapshot: screenshot
-    })
+    (item) =>
+      ({
+        roomId: `huya_${item.uid}`,
+        roomName: item.intro,
+        streamerName: item.nick,
+        cover: item.screenshot,
+        avatar: item.avatar180,
+        isOpen: item.isLive,
+        platform: "huya",
+        areaName: item.gameName,
+        url: `https://www.huya.com/${item.profileRoom}`
+      }) as Room
   )
 }
 export { hyFetch, hyFilter }

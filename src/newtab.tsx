@@ -15,6 +15,7 @@ import "./main.css"
 import { HiddenRooms } from "~components/HiddenRooms"
 import { LoginAlert } from "~components/LoginAlert"
 import { RichRoom } from "~components/RichRoom"
+import { hyFetch } from "~fetcher/huya"
 import { NotLoginError } from "~types/errors"
 
 const storage = new Storage({
@@ -59,12 +60,15 @@ function IndexNewtab() {
           setHiddenList(savedHiddenList)
         }
 
-        const [dy, bili] = await Promise.allSettled([dyFetch(), biliFetch()])
+        const [dy, bili, hy] = await Promise.allSettled([
+          dyFetch(),
+          biliFetch(),
+          hyFetch()
+        ])
         const res = []
         const errors: NotLoginError[] = []
 
         if (dy.status === "fulfilled") {
-          console.log("dy", dy.value)
           res.push(...dy.value)
         } else {
           if (dy.reason instanceof NotLoginError) {
@@ -80,6 +84,15 @@ function IndexNewtab() {
             errors.push(bili.reason)
           } else {
             console.warn("获取B站数据失败:", bili.reason)
+          }
+        }
+        if (hy.status === "fulfilled") {
+          res.push(...hy.value)
+        } else {
+          if (hy.reason instanceof NotLoginError) {
+            errors.push(hy.reason)
+          } else {
+            console.warn("获取虎牙数据失败:", hy.reason)
           }
         }
         setLoginErrors(errors)
