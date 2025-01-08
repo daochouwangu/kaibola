@@ -1,33 +1,34 @@
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+# 主播开播通知插件
 
-## Getting Started
+## 介绍
 
-First, run the development server:
+> 一款**开源**的开播通知软件  
+> 目前支持网站: 斗鱼、虎牙、哔哩哔哩
 
-```bash
-pnpm dev
-# or
-npm run dev
-```
+### 目前功能
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+1. 主播开播提醒
+2. 点击插件 显示当前开播主播
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
+### TODO List
 
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
+- [ ] 拖动优先度排序
+- [x] 精简模式
+- [x] 屏蔽部分主播开播通知
+- [ ] 支持更多直播网站
+- [ ] 未登录提醒
 
-## Making production build
+## 使用说明
 
-Run the following:
+1. 下载源代码文件夹
+2. 打开 [chrome拓展程序](chrome://extensions/)
+3. 打开右上角开发者模式
+4. 点击左上角 加载已解压的拓展程序
+5. 选中文件夹
+6. 确保你已经登录直播网站
+7. Enjoying
 
-```bash
-pnpm build
-# or
-npm run build
-```
+## 社区贡献
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
-
-## Submit to the webstores
-
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+1. 欢迎提交Issue
+2. 欢迎提交PR

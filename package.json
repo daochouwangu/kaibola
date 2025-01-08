@@ -1,9 +1,9 @@
 {
   "name": "kaibola",
   "displayName": "Kaibola",
-  "version": "0.0.1",
-  "description": "A basic Plasmo extension.",
-  "author": "Plasmo Corp. <foss@plasmo.com>",
+  "version": "2.0.0",
+  "description": "关注的主播开播提醒,以及显示当前在直播的订阅主播,支持斗鱼、虎牙、哔哩哔哩",
+  "author": "TimLi<daochouwangu@gmail.com>",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -32,7 +32,11 @@
       "https://*/*"
     ],
     "permissions": [
-      "tabs"
-    ]
+      "tabs",
+      "storage"
+    ],
+    "chrome_url_overrides": {
+      "newtab": "newtab.html"
+    }
   }
 }
