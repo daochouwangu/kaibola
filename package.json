@@ -33,7 +33,8 @@
     ],
     "permissions": [
       "tabs",
-      "storage"
+      "storage",
+      "notifications"
     ],
     "background": {
       "service_worker": "background.ts",

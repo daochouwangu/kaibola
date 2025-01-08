@@ -36,6 +36,10 @@ function IndexPopup() {
   })
   const [showHidden, setShowHidden] = useState(false)
   const [loginErrors, setLoginErrors] = useState<NotLoginError[]>([])
+  const [enableNotification, setEnableNotification] = useStorage<boolean>({
+    key: "enable_notification",
+    instance: storage
+  })
 
   const hiddenLiveCount = data.filter(
     (room) => room.isOpen && hiddenList?.includes(room.roomId)
@@ -150,6 +154,18 @@ function IndexPopup() {
             {showHidden ? "隐藏已屏蔽" : `显示全部(${hiddenLiveCount})`}
           </button>
         )}
+        <button
+          onClick={(e) => setEnableNotification((v) => !v)}
+          className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            checked={enableNotification}
+            onChange={(e) => setEnableNotification(e.target.checked)}
+            className="cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <span>开播提醒</span>
+        </button>
       </div>
       <div className="flex flex-col gap-1">
         {visibleRooms.map((item) => (

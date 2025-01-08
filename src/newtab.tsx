@@ -32,6 +32,10 @@ function IndexNewtab() {
   })
   const [showHidden, setShowHidden] = useState(false)
   const [loginErrors, setLoginErrors] = useState<NotLoginError[]>([])
+  const [enableNotification, setEnableNotification] = useStorage<boolean>({
+    key: "enable_notification",
+    instance: storage
+  })
 
   const addToHidden = async (id: string) => {
     const currentList = (await storage.get<string[]>("hidden_rooms")) || []
@@ -130,6 +134,21 @@ function IndexNewtab() {
             loginUrl={error.loginUrl}
           />
         ))}
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={enableNotification}
+            onChange={(e) => setEnableNotification(e.target.checked)}
+            id="enable-notification-newtab"
+            className="cursor-pointer"
+          />
+          <label
+            htmlFor="enable-notification-newtab"
+            className="cursor-pointer">
+            开播提醒
+          </label>
+        </div>
       </div>
 
       {hiddenRooms.length > 0 && (
