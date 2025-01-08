@@ -1,6 +1,7 @@
 import { Storage } from "@plasmohq/storage"
 
 import type { Room } from "~types/Room"
+import { fetchRoomData } from "~utils/platforms"
 
 import { biliFetch } from "./fetcher/bilibili"
 import { dyFetch } from "./fetcher/douyu"
@@ -18,18 +19,7 @@ let checkInterval: NodeJS.Timeout | null = null
 async function checkLiveStatus() {
   try {
     console.log("开始检查直播状态...")
-    const [dy, bili, hy] = await Promise.allSettled([
-      dyFetch(),
-      biliFetch(),
-      hyFetch()
-    ])
-
-    const currentRooms: Room[] = []
-
-    // 合并所有平台的结果
-    if (dy.status === "fulfilled") currentRooms.push(...dy.value)
-    if (bili.status === "fulfilled") currentRooms.push(...bili.value)
-    if (hy.status === "fulfilled") currentRooms.push(...hy.value)
+    const { rooms: currentRooms } = await fetchRoomData()
 
     console.log("当前在线房间:", currentRooms.length)
     console.log("上次在线房间:", lastRooms.length)

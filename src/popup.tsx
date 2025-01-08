@@ -15,6 +15,8 @@ import { hyFetch } from "./fetcher/huya"
 
 import "./main.css"
 
+import { fetchRoomData } from "~utils/platforms"
+
 declare global {
   interface Window {
     test: any
@@ -70,43 +72,9 @@ function IndexPopup() {
           setHiddenList(savedHiddenList)
         }
 
-        const [dy, bili, hy] = await Promise.allSettled([
-          dyFetch(),
-          biliFetch(),
-          hyFetch()
-        ])
-        const res = []
-        const errors: NotLoginError[] = []
-
-        if (dy.status === "fulfilled") {
-          res.push(...dy.value)
-        } else {
-          if (dy.reason instanceof NotLoginError) {
-            errors.push(dy.reason)
-          } else {
-            console.warn("获取斗鱼数据失败:", dy.reason)
-          }
-        }
-        if (bili.status === "fulfilled") {
-          res.push(...bili.value)
-        } else {
-          if (bili.reason instanceof NotLoginError) {
-            errors.push(bili.reason)
-          } else {
-            console.warn("获取B站数据失败:", bili.reason)
-          }
-        }
-        if (hy.status === "fulfilled") {
-          res.push(...hy.value)
-        } else {
-          if (hy.reason instanceof NotLoginError) {
-            errors.push(hy.reason)
-          } else {
-            console.warn("获取虎牙数据失败:", hy.reason)
-          }
-        }
+        const { rooms, errors } = await fetchRoomData()
         setLoginErrors(errors)
-        setData(res)
+        setData(rooms)
       } catch (error) {
         console.error("获取数据失败:", error)
       } finally {
