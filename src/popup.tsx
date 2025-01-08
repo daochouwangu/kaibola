@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
@@ -118,15 +119,18 @@ function IndexPopup() {
   const clear = () => {
     setHiddenList([])
   }
+  const openNewTab = () => {
+    chrome.tabs.create({ url: "newtab.html" })
+  }
   if (isLoading) {
     return (
-      <div className="flex flex-col p-2 w-72">
+      <div className="flex flex-col p-2 w-80">
         <div>加载中...</div>
       </div>
     )
   }
   return (
-    <div className="flex flex-col p-2 w-72">
+    <div className="flex flex-col p-2 w-80">
       {loginErrors.map((error, index) => (
         <LoginAlert
           key={index}
@@ -135,37 +139,60 @@ function IndexPopup() {
         />
       ))}
       <div className="flex justify-between items-center mb-2">
-        <button
-          onClick={(e) => setIsRich((v) => !v)}
-          className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={isRich}
-            onChange={(e) => setIsRich(e.target.checked)}
-            className="cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <span>显示预览</span>
-        </button>
-        {hiddenLiveCount > 0 && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowHidden(!showHidden)}
-            className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200">
-            {showHidden ? "隐藏已屏蔽" : `显示全部(${hiddenLiveCount})`}
+            onClick={(e) => setIsRich((v) => !v)}
+            className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={isRich}
+              onChange={(e) => setIsRich(e.target.checked)}
+              className="cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span>封面</span>
           </button>
-        )}
-        <button
-          onClick={(e) => setEnableNotification((v) => !v)}
-          className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={enableNotification}
-            onChange={(e) => setEnableNotification(e.target.checked)}
-            className="cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <span>开播提醒</span>
-        </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {hiddenLiveCount > 0 && (
+            <button
+              onClick={() => setShowHidden(!showHidden)}
+              className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200">
+              {showHidden ? "隐藏已屏蔽" : `显示全部(${hiddenLiveCount})`}
+            </button>
+          )}
+          <button
+            onClick={(e) => setEnableNotification((v) => !v)}
+            className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={enableNotification}
+              onChange={(e) => setEnableNotification(e.target.checked)}
+              className="cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span>开播提醒</span>
+          </button>
+          <button
+            onClick={openNewTab}
+            className="text-sm p-1.5 rounded bg-gray-100 hover:bg-gray-200"
+            title="在新标签页中打开">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
       <div className="flex flex-col gap-1">
         {visibleRooms.map((item) => (

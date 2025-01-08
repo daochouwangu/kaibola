@@ -135,34 +135,33 @@ function IndexNewtab() {
           />
         ))}
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={enableNotification}
-            onChange={(e) => setEnableNotification(e.target.checked)}
-            id="enable-notification-newtab"
-            className="cursor-pointer"
-          />
-          <label
-            htmlFor="enable-notification-newtab"
-            className="cursor-pointer">
-            开播提醒
-          </label>
+        <div className="flex justify-end items-center gap-2">
+          <button
+            onClick={(e) => setEnableNotification((v) => !v)}
+            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={enableNotification}
+              onChange={(e) => setEnableNotification(e.target.checked)}
+              id="enable-notification-newtab"
+              className="cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span>开播提醒</span>
+          </button>
+
+          {hiddenRooms.length > 0 && (
+            <button
+              onClick={() => setShowHidden(true)}
+              className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+              管理隐藏直播间
+              {hiddenLiveCount > 0 && (
+                <span className="ml-1 text-gray-500">({hiddenLiveCount})</span>
+              )}
+            </button>
+          )}
         </div>
       </div>
-
-      {hiddenRooms.length > 0 && (
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setShowHidden(true)}
-            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-            管理隐藏直播间
-            {hiddenLiveCount > 0 && (
-              <span className="ml-1 text-gray-500">({hiddenLiveCount})</span>
-            )}
-          </button>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {openedRooms.map((item) => (
