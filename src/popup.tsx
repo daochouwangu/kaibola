@@ -3,7 +3,9 @@ import { useEffect, useState } from "react"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
+import { LoginAlert } from "~components/LoginAlert"
 import { PlainRoom } from "~components/PlainRoom"
+import { NotLoginError } from "~types/errors"
 import type { Room } from "~types/Room"
 
 import { biliFetch } from "./fetcher/bilibili"
@@ -32,6 +34,7 @@ function IndexPopup() {
     instance: storage
   })
   const [showHidden, setShowHidden] = useState(false)
+  const [loginErrors, setLoginErrors] = useState<NotLoginError[]>([])
 
   const hiddenLiveCount = data.filter(
     (room) => room.isOpen && hiddenList?.includes(room.roomId)
@@ -63,16 +66,27 @@ function IndexPopup() {
 
         const [dy, bili] = await Promise.allSettled([dyFetch(), biliFetch()])
         const res = []
+        const errors: NotLoginError[] = []
+
         if (dy.status === "fulfilled") {
           res.push(...dy.value)
         } else {
-          console.warn("获取斗鱼数据失败:", dy.reason)
+          if (dy.reason instanceof NotLoginError) {
+            errors.push(dy.reason)
+          } else {
+            console.warn("获取斗鱼数据失败:", dy.reason)
+          }
         }
         if (bili.status === "fulfilled") {
           res.push(...bili.value)
         } else {
-          console.warn("获取B站数据失败:", bili.reason)
+          if (bili.reason instanceof NotLoginError) {
+            errors.push(bili.reason)
+          } else {
+            console.warn("获取B站数据失败:", bili.reason)
+          }
         }
+        setLoginErrors(errors)
         setData(res)
       } catch (error) {
         console.error("获取数据失败:", error)
@@ -95,6 +109,13 @@ function IndexPopup() {
   }
   return (
     <div className="flex flex-col p-2 w-72">
+      {loginErrors.map((error, index) => (
+        <LoginAlert
+          key={index}
+          platform={error.platform}
+          loginUrl={error.loginUrl}
+        />
+      ))}
       <div className="flex justify-between items-center mb-2">
         <button
           onClick={(e) => setIsRich((v) => !v)}

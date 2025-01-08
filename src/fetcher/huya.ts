@@ -33,6 +33,7 @@ function hyFilter(data): Room[] {
    * @nick 主播名称
    * @videoLoop 是否在播放录像 1是 0否
    */
+  console.log(data)
   if (!data || !data.result) {
     console.error("huya data can not be empty:" + data)
     return []

@@ -1,5 +1,6 @@
 //
 
+import { NotLoginError } from "~types/errors"
 import type { Room } from "~types/Room"
 
 // const url = "https://api.live.bilibili.com/relation/v1/Feed/getList";
@@ -8,8 +9,19 @@ const url =
 async function biliFetch(): Promise<Room[]> {
   return fetch(url)
     .then((res) => res.json())
-    .then(biliFilter)
+    .then((data) => {
+      if (data.code === -101 && data.message?.includes("账号未登录")) {
+        throw new NotLoginError(
+          "bilibili",
+          "https://passport.bilibili.com/login"
+        )
+      }
+      return biliFilter(data)
+    })
     .catch((error) => {
+      if (error instanceof NotLoginError) {
+        throw error
+      }
       console.error("获取bilibili数据失败")
       console.error(error)
       return []

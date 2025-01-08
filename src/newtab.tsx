@@ -13,7 +13,9 @@ import "./style.css"
 import "./main.css"
 
 import { HiddenRooms } from "~components/HiddenRooms"
+import { LoginAlert } from "~components/LoginAlert"
 import { RichRoom } from "~components/RichRoom"
+import { NotLoginError } from "~types/errors"
 
 const storage = new Storage({
   area: "sync",
@@ -28,6 +30,7 @@ function IndexNewtab() {
     instance: storage
   })
   const [showHidden, setShowHidden] = useState(false)
+  const [loginErrors, setLoginErrors] = useState<NotLoginError[]>([])
 
   const addToHidden = async (id: string) => {
     const currentList = (await storage.get<string[]>("hidden_rooms")) || []
@@ -58,16 +61,28 @@ function IndexNewtab() {
 
         const [dy, bili] = await Promise.allSettled([dyFetch(), biliFetch()])
         const res = []
+        const errors: NotLoginError[] = []
+
         if (dy.status === "fulfilled") {
+          console.log("dy", dy.value)
           res.push(...dy.value)
         } else {
-          console.warn("获取斗鱼数据失败:", dy.reason)
+          if (dy.reason instanceof NotLoginError) {
+            errors.push(dy.reason)
+          } else {
+            console.warn("获取斗鱼数据失败:", dy.reason)
+          }
         }
         if (bili.status === "fulfilled") {
           res.push(...bili.value)
         } else {
-          console.warn("获取B站数据失败:", bili.reason)
+          if (bili.reason instanceof NotLoginError) {
+            errors.push(bili.reason)
+          } else {
+            console.warn("获取B站数据失败:", bili.reason)
+          }
         }
+        setLoginErrors(errors)
         setData(res)
       } catch (error) {
         console.error("获取数据失败:", error)
@@ -94,6 +109,16 @@ function IndexNewtab() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+      <div className="mb-4 space-y-2">
+        {loginErrors.map((error, index) => (
+          <LoginAlert
+            key={index}
+            platform={error.platform}
+            loginUrl={error.loginUrl}
+          />
+        ))}
+      </div>
+
       {hiddenRooms.length > 0 && (
         <div className="flex justify-end mb-4">
           <button
