@@ -17,7 +17,7 @@ declare global {
   }
 }
 const storage = new Storage({
-  area: "local",
+  area: "sync",
   allCopied: true
 })
 function IndexPopup() {
@@ -25,52 +25,60 @@ function IndexPopup() {
     key: "isRich",
     instance: storage
   })
-  const [data, setData] = useState([] as Room[])
-  const [showAll, setShowAll] = useState(false)
+  const [data, setData] = useState<Room[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hiddenList, setHiddenList] = useStorage<string[]>({
-    key: "hiddenList",
+    key: "hidden_rooms",
     instance: storage
   })
-  if (hiddenList === null || hiddenList === undefined) {
-    setHiddenList([])
-  }
   window.test = () => {
     fetch("https://www.youtube.com/feed/subscriptions")
       .then((res) => res.text())
       .then(console.log)
   }
-  useEffect(() => {
-    Promise.allSettled([dyFetch(), biliFetch()]).then(([dy, bili]) => {
-      const res = []
-      if (dy.status === "fulfilled") {
-        res.push(...dy.value)
-      }
-      if (bili.status === "fulfilled") {
-        res.push(...bili.value)
-      }
-      setData(res)
-      setIsLoading(false)
-    })
-  }, [])
-  const addToHidden = (id: string) => {
-    setHiddenList([...hiddenList, id])
+  const addToHidden = async (id: string) => {
+    const currentList = (await storage.get<string[]>("hidden_rooms")) || []
+    const newList = [...currentList, id]
+    await storage.set("hidden_rooms", newList)
+    setHiddenList(newList)
   }
-  const [openedRooms, setOpenedRooms] = useState([] as Room[])
   useEffect(() => {
-    const openedRooms = data
-      .filter((v) => v.isOpen)
-      .filter((v) => {
-        if (hiddenList === null || hiddenList === undefined) {
-          return true
+    const fetchData = async () => {
+      try {
+        const savedHiddenList = await storage.get<string[]>("hidden_rooms")
+        if (savedHiddenList) {
+          setHiddenList(savedHiddenList)
         }
-        return !hiddenList.includes(v.roomId)
-      })
-    setOpenedRooms(openedRooms)
-  }, [data, hiddenList])
+
+        const [dy, bili] = await Promise.allSettled([dyFetch(), biliFetch()])
+        const res = []
+        if (dy.status === "fulfilled") {
+          res.push(...dy.value)
+        } else {
+          console.warn("获取斗鱼数据失败:", dy.reason)
+        }
+        if (bili.status === "fulfilled") {
+          res.push(...bili.value)
+        } else {
+          console.warn("获取B站数据失败:", bili.reason)
+        }
+        setData(res)
+      } catch (error) {
+        console.error("获取数据失败:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
   const clear = () => {
     setHiddenList([])
   }
+  const openedRooms = data.filter((v) => {
+    const isHidden = hiddenList?.includes(v.roomId)
+    return v.isOpen && !isHidden
+  })
   if (isLoading) {
     return (
       <div className="flex flex-col p-2 w-72">
@@ -80,7 +88,7 @@ function IndexPopup() {
   }
   return (
     <div className="flex flex-col p-2 w-72">
-      <div className=" cursor-pointer text-sm font-bold flex-row flex ali">
+      <div className="cursor-pointer text-sm font-bold flex-row flex ali">
         <input
           type="checkbox"
           checked={isRich}
@@ -88,23 +96,14 @@ function IndexPopup() {
         <span onClick={(e) => setIsRich((v) => !v)}>显示预览</span>
       </div>
       <div className="flex flex-col gap-1 ">
-        {showAll
-          ? data.map((item) => (
-              <PlainRoom
-                isRich={isRich}
-                room={item}
-                key={item.roomId}
-                addToHidden={addToHidden}
-              />
-            ))
-          : openedRooms.map((item) => (
-              <PlainRoom
-                isRich={isRich}
-                room={item}
-                key={item.roomId}
-                addToHidden={addToHidden}
-              />
-            ))}
+        {openedRooms.map((item) => (
+          <PlainRoom
+            isRich={isRich}
+            room={item}
+            key={item.roomId}
+            addToHidden={addToHidden}
+          />
+        ))}
       </div>
     </div>
   )
