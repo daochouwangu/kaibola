@@ -4,6 +4,8 @@ interface PlainRoomProps {
   room: Room
   isRich: boolean
   addToHidden: (id: string) => void
+  isHidden?: boolean
+  onUnhide?: () => void
 }
 function showTime(n: string) {
   if (!n) {
@@ -20,7 +22,9 @@ function shortName(n: string, len = 20) {
 export const PlainRoom: React.FC<PlainRoomProps> = ({
   room,
   isRich,
-  addToHidden
+  addToHidden,
+  isHidden,
+  onUnhide
 }) => {
   const onClickHidden = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -33,21 +37,23 @@ export const PlainRoom: React.FC<PlainRoomProps> = ({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg cursor-pointer"
+      className={`group relative overflow-hidden rounded-lg bg-white border border-gray-200 
+      shadow-sm hover:shadow-md transition-all cursor-pointer 
+      ${isHidden ? "bg-gray-50" : "hover:border-blue-200"}`}
       onClick={toRoom}>
       {isRich && (
         <div className="relative aspect-video w-full overflow-hidden">
           <img
             src={room.cover}
             alt={room.roomName}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute left-2 top-2 flex gap-1">
-            <span className="rounded bg-black/50 px-1.5 py-0.5 text-xs text-white">
+            <span className="rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
               {room.platform}
             </span>
             {room.areaName && (
-              <span className="rounded bg-black/50 px-1.5 py-0.5 text-xs text-white">
+              <span className="rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
                 {room.areaName}
               </span>
             )}
@@ -60,18 +66,32 @@ export const PlainRoom: React.FC<PlainRoomProps> = ({
           <img
             src={room.avatar}
             alt={room.streamerName}
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8 rounded-full ring-1 ring-gray-200"
           />
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-bold truncate">{room.streamerName}</h3>
+            <h3 className="text-sm font-bold truncate text-gray-900">
+              {room.streamerName}
+            </h3>
             <p className="text-xs text-gray-600 truncate">
               {shortName(room.roomName, 15)}
             </p>
           </div>
           <button
-            onClick={onClickHidden}
-            className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs hover:bg-gray-200">
-            隐藏
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isHidden && onUnhide) {
+                onUnhide()
+              } else {
+                addToHidden(room.roomId)
+              }
+            }}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-xs transition-colors
+            ${
+              isHidden
+                ? "bg-blue-50 hover:bg-blue-100 text-blue-600"
+                : "bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+            }`}>
+            {isHidden ? "取消隐藏" : "隐藏"}
           </button>
         </div>
 
