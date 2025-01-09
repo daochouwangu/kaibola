@@ -3,6 +3,7 @@ import { Storage } from "@plasmohq/storage"
 import { biliFetch } from "~fetcher/bilibili"
 import { dyFetch } from "~fetcher/douyu"
 import { hyFetch } from "~fetcher/huya"
+import { twitchFetch } from "~fetcher/twitch"
 import { NotLoginError } from "~types/errors"
 import type { Platform, PlatformConfig } from "~types/platform"
 import type { Room } from "~types/Room"
@@ -22,6 +23,26 @@ export const PLATFORM_CONFIGS: PlatformConfig[] = [
     id: "huya",
     name: "虎牙",
     fetchFn: hyFetch
+  },
+  {
+    id: "twitch",
+    name: "Twitch",
+    fetchFn: twitchFetch,
+    requiresAuth: true,
+    authConfig: {
+      configFields: [
+        {
+          key: "clientId",
+          label: "Client ID",
+          type: "text"
+        },
+        {
+          key: "authToken",
+          label: "Auth Token",
+          type: "password"
+        }
+      ]
+    }
   }
 ]
 

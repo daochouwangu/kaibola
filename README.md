@@ -16,6 +16,7 @@
 - [x] 精简模式
 - [x] 屏蔽部分主播开播通知
 - [ ] 支持更多直播网站
+- [ ] 抖音：https://live.douyin.com/webcast/room/web/enter/?aid=6383&web_rid=577520267083
 - [ ] 未登录提醒
 
 ## 使用说明

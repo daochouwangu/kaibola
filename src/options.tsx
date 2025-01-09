@@ -22,8 +22,11 @@ function IndexOptions() {
   })
   const [enabledPlatforms, setEnabledPlatforms] = useStorage<Platform[]>({
     key: "enabled_platforms",
-    instance: storage,
-    defaultValue: ["bilibili", "douyu"]
+    instance: storage
+  })
+  const [twitchConfig, setTwitchConfig] = useStorage({
+    key: "twitch_config",
+    instance: storage
   })
 
   const handleChange = async (checked: boolean) => {
@@ -118,6 +121,47 @@ function IndexOptions() {
             </div>
           </div>
         </div>
+
+        {/* Twitch 配置部分 */}
+        {enabledPlatforms?.includes("twitch") && (
+          <div className="mt-6 space-y-6 rounded-lg bg-white p-6 shadow">
+            <h2 className="font-medium text-gray-900">Twitch 配置</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Client ID
+                </label>
+                <input
+                  type="text"
+                  value={twitchConfig?.clientId || ""}
+                  onChange={(e) =>
+                    setTwitchConfig({
+                      ...twitchConfig,
+                      clientId: e.target.value
+                    })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Auth Token
+                </label>
+                <input
+                  type="password"
+                  value={twitchConfig?.authToken || ""}
+                  onChange={(e) =>
+                    setTwitchConfig({
+                      ...twitchConfig,
+                      authToken: e.target.value
+                    })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
