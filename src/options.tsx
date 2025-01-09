@@ -184,22 +184,6 @@ function IndexOptions() {
             )}
 
             <div className="space-y-4">
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Client ID
-                </label>
-                <input
-                  type="text"
-                  value={twitchConfig?.clientId || ""}
-                  onChange={(e) =>
-                    setTwitchConfig({
-                      ...twitchConfig,
-                      clientId: e.target.value
-                    })
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Auth Token

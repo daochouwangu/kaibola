@@ -68,7 +68,6 @@ export async function twitchFetch(): Promise<Room[]> {
     const response = await fetch("https://gql.twitch.tv/gql", {
       method: "POST",
       headers: {
-        // "Client-Id": config.clientId,
         Authorization: `OAuth ${config.authToken}`,
         "Content-Type": "application/json"
       },
