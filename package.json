@@ -1,7 +1,7 @@
 {
   "name": "kaibola",
   "displayName": "Kaibola",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "关注的主播开播提醒,以及显示当前在直播的订阅主播,支持斗鱼、虎牙、哔哩哔哩",
   "author": "TimLi<daochouwangu@gmail.com>",
   "scripts": {
