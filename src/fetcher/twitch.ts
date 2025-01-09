@@ -39,8 +39,11 @@ interface TwitchResponse {
 
 export async function twitchFetch(): Promise<Room[]> {
   const config = await storage.get<TwitchConfig>("twitch_config")
-  if (!config?.clientId || !config?.authToken) {
-    throw new NotLoginError("twitch", "https://www.twitch.tv/login")
+  if (!config?.authToken) {
+    throw new NotLoginError(
+      "twitch",
+      "https://www.twitch.tv/login?source=kaibola_auth"
+    )
   }
 
   const query = [
@@ -65,7 +68,7 @@ export async function twitchFetch(): Promise<Room[]> {
     const response = await fetch("https://gql.twitch.tv/gql", {
       method: "POST",
       headers: {
-        "Client-Id": config.clientId,
+        // "Client-Id": config.clientId,
         Authorization: `OAuth ${config.authToken}`,
         "Content-Type": "application/json"
       },
@@ -74,7 +77,10 @@ export async function twitchFetch(): Promise<Room[]> {
 
     if (!response.ok) {
       if (response.status === 401) {
-        throw new NotLoginError("twitch", "https://www.twitch.tv/login")
+        throw new NotLoginError(
+          "twitch",
+          "https://twitch.tv/login?source=kaibola_auth"
+        )
       }
       throw new Error(`HTTP error! status: ${response.status}`)
     }

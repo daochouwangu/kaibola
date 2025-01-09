@@ -32,14 +32,26 @@ function IndexOptions() {
     instance: storage
   })
 
+  const [checkInterval, setCheckInterval] = useStorage<number>({
+    key: "check_interval",
+    instance: storage
+  })
+
   const actualReplaceNewTab = replaceNewTab || false
   const actualEnableNotification = enableNotification || false
   const actualEnabledPlatforms = enabledPlatforms || ["bilibili", "douyu"]
+  const actualCheckInterval = checkInterval || 3 // 默认3分钟
 
   const handleChange = async (checked: boolean) => {
     await setReplaceNewTab(checked)
     // 不再自动重载扩展，只提示用户
     alert("设置已保存，请手动重启扩展以使更改生效")
+  }
+
+  const handleTwitchAuth = () => {
+    chrome.tabs.create({
+      url: "https://www.twitch.tv/?source=kaibola_auth"
+    })
   }
 
   return (
@@ -125,6 +137,28 @@ function IndexOptions() {
               <p className="mt-1 text-sm text-gray-500 ml-6">
                 当关注的主播开播时发送系统通知
               </p>
+
+              {/* 添加检查间隔设置 */}
+              {actualEnableNotification && (
+                <div className="mt-4 ml-6">
+                  <label className="block text-sm font-medium text-gray-700">
+                    检查间隔（分钟）
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={actualCheckInterval}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      if (value >= 1 && value <= 60) {
+                        setCheckInterval(value)
+                      }
+                    }}
+                    className="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -132,9 +166,25 @@ function IndexOptions() {
         {/* Twitch 配置部分 */}
         {actualEnabledPlatforms?.includes("twitch") && (
           <div className="mt-6 space-y-6 rounded-lg bg-white p-6 shadow">
-            <h2 className="font-medium text-gray-900">Twitch 配置</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium text-gray-900">Twitch 配置</h2>
+              <button
+                onClick={handleTwitchAuth}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                自动获取认证
+              </button>
+            </div>
+
+            {twitchConfig?.authToken ? (
+              <div className="text-sm text-green-600">✓ 已配置认证信息</div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                点击上方按钮自动获取认证信息
+              </div>
+            )}
+
             <div className="space-y-4">
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Client ID
                 </label>
@@ -149,7 +199,7 @@ function IndexOptions() {
                   }
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
-              </div>
+              </div> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Auth Token

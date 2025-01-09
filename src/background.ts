@@ -70,6 +70,8 @@ async function updateLiveCheck() {
   console.log("updateLiveCheck")
   try {
     const enableNotification = await storage.get<boolean>("enable_notification")
+    const checkIntervalMinutes =
+      (await storage.get<number>("check_interval")) || 3 // 默认3分钟
 
     if (checkInterval) {
       clearInterval(checkInterval)
@@ -78,7 +80,10 @@ async function updateLiveCheck() {
 
     if (enableNotification) {
       await checkLiveStatus()
-      checkInterval = setInterval(checkLiveStatus, 60 * 1000)
+      checkInterval = setInterval(
+        checkLiveStatus,
+        checkIntervalMinutes * 60 * 1000
+      )
     }
   } catch (error) {
     handleError(error as Error)
@@ -88,10 +93,10 @@ async function updateLiveCheck() {
 // 监听存储变化
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.replace_new_tab) {
-    // 不要在这里直接调用 updateNewTabOverride
     console.log("新标签页设置已更改")
   }
-  if (changes.enable_notification) {
+  // 当通知设置或检查间隔改变时更新检查
+  if (changes.enable_notification || changes.check_interval) {
     updateLiveCheck().catch(handleError)
   }
 })
@@ -106,6 +111,13 @@ chrome.notifications.onClicked.addListener((roomId) => {
       .catch(handleError)
   } catch (error) {
     handleError(error as Error)
+  }
+})
+
+// 监听来自content script的消息
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (message.type === "CLOSE_CURRENT_TAB" && sender.tab) {
+    chrome.tabs.remove(sender.tab.id)
   }
 })
 

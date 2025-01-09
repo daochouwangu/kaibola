@@ -30,11 +30,15 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
+      "https://*.twitch.tv/*",
+      "https://*.bilibili.com/*",
+      "https://*.douyu.com/*",
+      "https://*.huya.com/*"
     ],
     "permissions": [
       "tabs",
       "storage",
+      "cookies",
       "notifications"
     ],
     "background": {

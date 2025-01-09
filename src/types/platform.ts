@@ -1,5 +1,4 @@
 export interface TwitchConfig {
-  clientId: string
   authToken: string
 }
 

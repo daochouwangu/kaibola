@@ -7,7 +7,8 @@ export function LoginAlert({ platform, loginUrl }: LoginAlertProps) {
   const platformName = {
     douyu: "斗鱼",
     bilibili: "B站",
-    huya: "虎牙"
+    huya: "虎牙",
+    twitch: "Twitch"
   }[platform]
 
   return (

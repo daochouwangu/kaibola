@@ -13,6 +13,7 @@ import { getEnabledPlatforms } from "~utils/platforms"
 
 import "./main.css"
 
+import { Toast } from "~components/Toast"
 import { fetchRoomData } from "~utils/platforms"
 
 declare global {
@@ -45,6 +46,7 @@ function IndexPopup() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
     null
   )
+  const [showToast, setShowToast] = useState(false)
 
   const hiddenLiveCount = data.filter(
     (room) => room.isOpen && hiddenList?.includes(room.roomId)
@@ -102,6 +104,12 @@ function IndexPopup() {
   const openNewTab = () => {
     chrome.tabs.create({ url: "newtab.html" })
   }
+  const handleNotificationToggle = (value: boolean) => {
+    setEnableNotification(value)
+    if (value) {
+      setShowToast(true)
+    }
+  }
   if (isLoading) {
     return (
       <div className="flex flex-col p-2 w-80">
@@ -120,24 +128,19 @@ function IndexPopup() {
           loginUrl={error.loginUrl}
         />
       ))}
-      <PlatformTabs
-        platforms={enabledPlatforms}
-        selectedPlatform={selectedPlatform}
-        onSelect={setSelectedPlatform}
-      />
+      {showToast && (
+        <Toast message="已开启直播提醒" onClose={() => setShowToast(false)} />
+      )}
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => setIsRich((v) => !v)}
-            className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={actualIsRich}
-              onChange={(e) => setIsRich(e.target.checked)}
-              className="cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span>封面</span>
+            className={`text-sm px-2 py-1 rounded transition-colors ${
+              actualIsRich
+                ? "bg-blue-100 hover:bg-blue-200 text-blue-700"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}>
+            封面
           </button>
         </div>
 
@@ -145,21 +148,22 @@ function IndexPopup() {
           {hiddenLiveCount > 0 && (
             <button
               onClick={() => setShowHidden(!showHidden)}
-              className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200">
-              {showHidden ? "显示正常" : `显示隐藏(${hiddenLiveCount})`}
+              className={`text-sm px-2 py-1 rounded transition-colors ${
+                showHidden
+                  ? "bg-blue-100 hover:bg-blue-200 text-blue-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}>
+              {showHidden ? "正常" : `隐藏(${hiddenLiveCount})`}
             </button>
           )}
           <button
-            onClick={(e) => setEnableNotification((v) => !v)}
-            className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={actualEnableNotification}
-              onChange={(e) => setEnableNotification(e.target.checked)}
-              className="cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span>开播提醒</span>
+            onClick={(e) => handleNotificationToggle(!actualEnableNotification)}
+            className={`text-sm px-2 py-1 rounded transition-colors ${
+              actualEnableNotification
+                ? "bg-blue-100 hover:bg-blue-200 text-blue-700"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}>
+            提醒
           </button>
           <button
             onClick={() => chrome.runtime.openOptionsPage()}
@@ -205,6 +209,11 @@ function IndexPopup() {
           </button>
         </div>
       </div>
+      <PlatformTabs
+        platforms={enabledPlatforms}
+        selectedPlatform={selectedPlatform}
+        onSelect={setSelectedPlatform}
+      />
       <div className="flex flex-col gap-1">
         {visibleRooms.map((item) => (
           <PlainRoom

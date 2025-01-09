@@ -32,11 +32,6 @@ export const PLATFORM_CONFIGS: PlatformConfig[] = [
     authConfig: {
       configFields: [
         {
-          key: "clientId",
-          label: "Client ID",
-          type: "text"
-        },
-        {
           key: "authToken",
           label: "Auth Token",
           type: "password"
