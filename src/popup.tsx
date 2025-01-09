@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react"
 
-import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
 import { LoginAlert } from "~components/LoginAlert"
 import { PlainRoom } from "~components/PlainRoom"
+import { PlatformTabs } from "~components/PlatformTabs"
 import { NotLoginError } from "~types/errors"
+import type { Platform } from "~types/platform"
 import type { Room } from "~types/Room"
-
-import { biliFetch } from "./fetcher/bilibili"
-import { dyFetch } from "./fetcher/douyu"
-import { hyFetch } from "./fetcher/huya"
+import { getEnabledPlatforms } from "~utils/platforms"
 
 import "./main.css"
 
@@ -43,6 +41,10 @@ function IndexPopup() {
     key: "enable_notification",
     instance: storage
   })
+  const [enabledPlatforms, setEnabledPlatforms] = useState<Platform[]>([])
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
+    null
+  )
 
   const hiddenLiveCount = data.filter(
     (room) => room.isOpen && hiddenList?.includes(room.roomId)
@@ -50,7 +52,10 @@ function IndexPopup() {
 
   const visibleRooms = data.filter((v) => {
     const isHidden = hiddenList?.includes(v.roomId)
-    return v.isOpen && (showHidden || !isHidden)
+    const matchPlatform = selectedPlatform
+      ? v.platform === selectedPlatform
+      : true
+    return v.isOpen && matchPlatform && (showHidden ? isHidden : !isHidden)
   })
 
   window.test = () => {
@@ -84,6 +89,13 @@ function IndexPopup() {
 
     fetchData()
   }, [])
+  useEffect(() => {
+    const loadPlatforms = async () => {
+      const platforms = await getEnabledPlatforms()
+      setEnabledPlatforms(platforms)
+    }
+    loadPlatforms()
+  }, [])
   const clear = () => {
     setHiddenList([])
   }
@@ -106,6 +118,11 @@ function IndexPopup() {
           loginUrl={error.loginUrl}
         />
       ))}
+      <PlatformTabs
+        platforms={enabledPlatforms}
+        selectedPlatform={selectedPlatform}
+        onSelect={setSelectedPlatform}
+      />
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <button
@@ -127,7 +144,7 @@ function IndexPopup() {
             <button
               onClick={() => setShowHidden(!showHidden)}
               className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200">
-              {showHidden ? "隐藏已屏蔽" : `显示全部(${hiddenLiveCount})`}
+              {showHidden ? "显示正常" : `显示隐藏(${hiddenLiveCount})`}
             </button>
           )}
           <button
@@ -141,6 +158,30 @@ function IndexPopup() {
               onClick={(e) => e.stopPropagation()}
             />
             <span>开播提醒</span>
+          </button>
+          <button
+            onClick={() => chrome.runtime.openOptionsPage()}
+            className="text-sm p-1.5 rounded bg-gray-100 hover:bg-gray-200"
+            title="设置">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
           </button>
           <button
             onClick={openNewTab}

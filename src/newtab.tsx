@@ -3,20 +3,18 @@ import { useEffect, useState } from "react"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
-import { PlainRoom } from "~components/PlainRoom"
 import type { Room } from "~types/Room"
-
-import { biliFetch } from "./fetcher/bilibili"
-import { dyFetch } from "./fetcher/douyu"
 
 import "./style.css"
 import "./main.css"
 
 import { HiddenRooms } from "~components/HiddenRooms"
 import { LoginAlert } from "~components/LoginAlert"
+import { PlatformTabs } from "~components/PlatformTabs"
 import { RichRoom } from "~components/RichRoom"
-import { hyFetch } from "~fetcher/huya"
 import { NotLoginError } from "~types/errors"
+import type { Platform } from "~types/platform"
+import { fetchRoomData, getEnabledPlatforms } from "~utils/platforms"
 
 const storage = new Storage({
   area: "sync",
@@ -36,6 +34,10 @@ function IndexNewtab() {
     key: "enable_notification",
     instance: storage
   })
+  const [enabledPlatforms, setEnabledPlatforms] = useState<Platform[]>([])
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
+    null
+  )
 
   const addToHidden = async (id: string) => {
     const currentList = (await storage.get<string[]>("hidden_rooms")) || []
@@ -64,43 +66,9 @@ function IndexNewtab() {
           setHiddenList(savedHiddenList)
         }
 
-        const [dy, bili, hy] = await Promise.allSettled([
-          dyFetch(),
-          biliFetch(),
-          hyFetch()
-        ])
-        const res = []
-        const errors: NotLoginError[] = []
-
-        if (dy.status === "fulfilled") {
-          res.push(...dy.value)
-        } else {
-          if (dy.reason instanceof NotLoginError) {
-            errors.push(dy.reason)
-          } else {
-            console.warn("获取斗鱼数据失败:", dy.reason)
-          }
-        }
-        if (bili.status === "fulfilled") {
-          res.push(...bili.value)
-        } else {
-          if (bili.reason instanceof NotLoginError) {
-            errors.push(bili.reason)
-          } else {
-            console.warn("获取B站数据失败:", bili.reason)
-          }
-        }
-        if (hy.status === "fulfilled") {
-          res.push(...hy.value)
-        } else {
-          if (hy.reason instanceof NotLoginError) {
-            errors.push(hy.reason)
-          } else {
-            console.warn("获取虎牙数据失败:", hy.reason)
-          }
-        }
+        const { rooms, errors } = await fetchRoomData()
         setLoginErrors(errors)
-        setData(res)
+        setData(rooms)
       } catch (error) {
         console.error("获取数据失败:", error)
       } finally {
@@ -111,9 +79,20 @@ function IndexNewtab() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    const loadPlatforms = async () => {
+      const platforms = await getEnabledPlatforms()
+      setEnabledPlatforms(platforms)
+    }
+    loadPlatforms()
+  }, [])
+
   const openedRooms = data.filter((v) => {
     const isHidden = hiddenList?.includes(v.roomId)
-    return v.isOpen && !isHidden
+    const matchPlatform = selectedPlatform
+      ? v.platform === selectedPlatform
+      : true
+    return v.isOpen && !isHidden && matchPlatform
   })
 
   if (isLoading) {
@@ -136,6 +115,31 @@ function IndexNewtab() {
         ))}
 
         <div className="flex justify-end items-center gap-2">
+          <button
+            onClick={() => chrome.runtime.openOptionsPage()}
+            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
+            title="设置">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </button>
+
           <button
             onClick={(e) => setEnableNotification((v) => !v)}
             className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center gap-2">
@@ -162,6 +166,12 @@ function IndexNewtab() {
           )}
         </div>
       </div>
+
+      <PlatformTabs
+        platforms={enabledPlatforms}
+        selectedPlatform={selectedPlatform}
+        onSelect={setSelectedPlatform}
+      />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {openedRooms.map((item) => (
