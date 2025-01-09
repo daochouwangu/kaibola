@@ -109,6 +109,8 @@ function IndexPopup() {
       </div>
     )
   }
+  const actualIsRich = isRich || false
+  const actualEnableNotification = enableNotification || false
   return (
     <div className="flex flex-col p-2 w-80">
       {loginErrors.map((error, index) => (
@@ -130,7 +132,7 @@ function IndexPopup() {
             className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
             <input
               type="checkbox"
-              checked={isRich}
+              checked={actualIsRich}
               onChange={(e) => setIsRich(e.target.checked)}
               className="cursor-pointer"
               onClick={(e) => e.stopPropagation()}
@@ -152,7 +154,7 @@ function IndexPopup() {
             className="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1.5">
             <input
               type="checkbox"
-              checked={enableNotification}
+              checked={actualEnableNotification}
               onChange={(e) => setEnableNotification(e.target.checked)}
               className="cursor-pointer"
               onClick={(e) => e.stopPropagation()}
@@ -206,7 +208,7 @@ function IndexPopup() {
       <div className="flex flex-col gap-1">
         {visibleRooms.map((item) => (
           <PlainRoom
-            isRich={isRich}
+            isRich={actualIsRich}
             room={item}
             key={item.roomId}
             addToHidden={addToHidden}

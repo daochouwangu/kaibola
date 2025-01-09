@@ -16,23 +16,30 @@ function IndexOptions() {
     key: "replace_new_tab",
     instance: storage
   })
+
   const [enableNotification, setEnableNotification] = useStorage<boolean>({
     key: "enable_notification",
     instance: storage
   })
+
   const [enabledPlatforms, setEnabledPlatforms] = useStorage<Platform[]>({
     key: "enabled_platforms",
     instance: storage
   })
+
   const [twitchConfig, setTwitchConfig] = useStorage({
     key: "twitch_config",
     instance: storage
   })
 
+  const actualReplaceNewTab = replaceNewTab || false
+  const actualEnableNotification = enableNotification || false
+  const actualEnabledPlatforms = enabledPlatforms || ["bilibili", "douyu"]
+
   const handleChange = async (checked: boolean) => {
     await setReplaceNewTab(checked)
-    // 需要重新加载扩展使设置生效
-    chrome.runtime.reload()
+    // 不再自动重载扩展，只提示用户
+    alert("设置已保存，请手动重启扩展以使更改生效")
   }
 
   return (
@@ -50,11 +57,11 @@ function IndexOptions() {
                   <input
                     type="checkbox"
                     id={`platform-${platform.id}`}
-                    checked={enabledPlatforms?.includes(platform.id)}
+                    checked={actualEnabledPlatforms?.includes(platform.id)}
                     onChange={(e) => {
                       const newPlatforms = e.target.checked
-                        ? [...(enabledPlatforms || []), platform.id]
-                        : (enabledPlatforms || []).filter(
+                        ? [...(actualEnabledPlatforms || []), platform.id]
+                        : (actualEnabledPlatforms || []).filter(
                             (p) => p !== platform.id
                           )
                       setEnabledPlatforms(newPlatforms)
@@ -79,7 +86,7 @@ function IndexOptions() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={replaceNewTab}
+                  checked={actualReplaceNewTab}
                   onChange={(e) => handleChange(e.target.checked)}
                   id="replace-new-tab"
                   className="h-4 w-4 rounded border-gray-300"
@@ -104,7 +111,7 @@ function IndexOptions() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={enableNotification}
+                  checked={actualEnableNotification}
                   onChange={(e) => setEnableNotification(e.target.checked)}
                   id="enable-notification"
                   className="h-4 w-4 rounded border-gray-300"
@@ -123,7 +130,7 @@ function IndexOptions() {
         </div>
 
         {/* Twitch 配置部分 */}
-        {enabledPlatforms?.includes("twitch") && (
+        {actualEnabledPlatforms?.includes("twitch") && (
           <div className="mt-6 space-y-6 rounded-lg bg-white p-6 shadow">
             <h2 className="font-medium text-gray-900">Twitch 配置</h2>
             <div className="space-y-4">
