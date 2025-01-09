@@ -31,12 +31,18 @@ jobs:
       - name: Package Extension
         run: pnpm package
 
+      - name: Rename Package
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION_FILENAME=$(echo $VERSION | tr '.' '-')
+          mv build/chrome-mv3-prod.zip build/kaibola-${VERSION_FILENAME}.zip
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          files: build/chrome-mv3-prod.zip
+          files: build/kaibola-*.zip
           draft: false
           prerelease: false
           generate_release_notes: true

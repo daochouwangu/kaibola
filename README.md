@@ -24,7 +24,7 @@
 ### 方式一：直接下载（推荐）
 
 1. 前往 [Releases](../../releases) 页面
-2. 下载最新版本的 `chrome-mv3-prod.zip` 文件（版本号格式为 v*.*.\* ，如 v1.0.0）
+2. 下载最新版本的 `kaibola-x-x-x.zip` 文件（如 kaibola-2-0-2.zip）
 3. 解压下载的文件
 4. 打开 [chrome拓展程序](chrome://extensions/)
 5. 打开右上角开发者模式
