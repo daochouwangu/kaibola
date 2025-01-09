@@ -12,12 +12,12 @@
 
 ### TODO List
 
-- [ ] 拖动优先度排序
+- [x] 未登录提醒
 - [x] 精简模式
-- [x] 屏蔽部分主播开播通知
-- [ ] 支持更多直播网站
-- [ ] 抖音：https://live.douyin.com/webcast/room/web/enter/?aid=6383&web_rid=577520267083
-- [ ] 未登录提醒
+- [ ] 拖动优先度排序
+- [ ] 屏蔽部分主播开播通知
+- [ ] 支持Youtube
+- [ ] 抖音：没有API，只有一个查询房间开播状态的：https://live.douyin.com/webcast/room/web/enter/?aid=6383&web_rid=577520267083
 
 ## 使用说明
 
