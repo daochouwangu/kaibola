@@ -17,28 +17,53 @@ function handleError(error: Error) {
 async function checkLiveStatus() {
   console.log("checkLiveStatus")
   try {
-    const enableNotification = await storage.get<boolean>("enable_notification")
+    const enableNotification =
+      (await storage.get<boolean>("enable_notification")) ?? true // 默认为 true
     if (!enableNotification) return
 
     const { rooms } = await fetchRoomData()
     const lastStatus = await storage.get<Record<string, boolean>>("last_status")
+    const hiddenRooms = (await storage.get<string[]>("hidden_rooms")) || []
     const newStatus: Record<string, boolean> = {}
     console.log(lastStatus)
+
+    // 收集新开播的主播
+    const newLiveStreamers = []
     for (const room of rooms) {
       newStatus[room.roomId] = room.isOpen
-      if (lastStatus && !lastStatus[room.roomId] && room.isOpen) {
-        try {
-          await chrome.notifications.create(room.roomId, {
-            type: "basic",
-            iconUrl: room.avatar,
-            title: `${room.streamerName} 开播了`,
-            message: room.roomName,
-            priority: 2
-          })
-        } catch (error) {
-          handleError(error as Error)
-          return
-        }
+      if (
+        lastStatus &&
+        !lastStatus[room.roomId] &&
+        room.isOpen &&
+        !hiddenRooms.includes(room.roomId)
+      ) {
+        newLiveStreamers.push(room)
+      }
+    }
+
+    // 如果有新开播的主播，发送合并通知
+    if (newLiveStreamers.length > 0) {
+      try {
+        const title =
+          newLiveStreamers.length === 1
+            ? `${newLiveStreamers[0].streamerName} 开播了`
+            : `${newLiveStreamers.length} 位主播开播了`
+
+        const message =
+          newLiveStreamers.length === 1
+            ? newLiveStreamers[0].roomName
+            : newLiveStreamers.map((room) => room.streamerName).join("、")
+
+        await chrome.notifications.create("live_notification", {
+          type: "basic",
+          iconUrl: newLiveStreamers[0].avatar,
+          title,
+          message,
+          priority: 2
+        })
+      } catch (error) {
+        handleError(error as Error)
+        return
       }
     }
 
@@ -88,11 +113,11 @@ chrome.storage.onChanged.addListener((changes) => {
 })
 
 // 监听通知点击
-chrome.notifications.onClicked.addListener((roomId) => {
+chrome.notifications.onClicked.addListener((notificationId) => {
   try {
     chrome.tabs
       .create({
-        url: `chrome-extension://${chrome.runtime.id}/newtab.html`
+        url: `chrome-extension://${chrome.runtime.id}/tabs/index.html`
       })
       .catch(handleError)
   } catch (error) {

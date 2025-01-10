@@ -102,7 +102,7 @@ function IndexPopup() {
     setHiddenList([])
   }
   const openNewTab = () => {
-    chrome.tabs.create({ url: "newtab.html" })
+    chrome.tabs.create({ url: "tabs/index.html" })
   }
   const handleNotificationToggle = (value: boolean) => {
     setEnableNotification(value)
@@ -118,7 +118,7 @@ function IndexPopup() {
     )
   }
   const actualIsRich = isRich || false
-  const actualEnableNotification = enableNotification || false
+  const actualEnableNotification = enableNotification ?? true
   return (
     <div className="flex flex-col p-2 w-80">
       {loginErrors.map((error, index) => (

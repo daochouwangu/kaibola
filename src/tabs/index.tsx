@@ -5,8 +5,8 @@ import { useStorage } from "@plasmohq/storage/hook"
 
 import type { Room } from "~types/Room"
 
-import "./style.css"
-import "./main.css"
+import "../style.css"
+import "../main.css"
 
 import { HiddenRooms } from "~components/HiddenRooms"
 import { LoginAlert } from "~components/LoginAlert"
@@ -21,7 +21,7 @@ const storage = new Storage({
   allCopied: true
 })
 
-function IndexNewtab() {
+function TabsPage() {
   const [data, setData] = useState<Room[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hiddenList, setHiddenList] = useStorage<string[]>({
@@ -190,4 +190,4 @@ function IndexNewtab() {
   )
 }
 
-export default IndexNewtab
+export default TabsPage
