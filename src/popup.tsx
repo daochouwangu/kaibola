@@ -38,8 +38,8 @@ function IndexPopup() {
   })
   const [showHidden, setShowHidden] = useState(false)
   const [loginErrors, setLoginErrors] = useState<NotLoginError[]>([])
-  const [enableNotification, setEnableNotification] = useStorage<boolean>({
-    key: "enable_notification",
+  const [muteNotification, setMuteNotification] = useStorage<boolean>({
+    key: "mute_notification",
     instance: storage
   })
   const [enabledPlatforms, setEnabledPlatforms] = useState<Platform[]>([])
@@ -105,7 +105,7 @@ function IndexPopup() {
     chrome.tabs.create({ url: "tabs/index.html" })
   }
   const handleNotificationToggle = (value: boolean) => {
-    setEnableNotification(value)
+    setMuteNotification(!value)
     if (value) {
       setShowToast(true)
     }
@@ -118,7 +118,7 @@ function IndexPopup() {
     )
   }
   const actualIsRich = isRich || false
-  const actualEnableNotification = enableNotification ?? true
+  const actualMuteNotification = muteNotification ?? false
   return (
     <div className="flex flex-col p-2 w-80">
       {loginErrors.map((error, index) => (
@@ -157,9 +157,9 @@ function IndexPopup() {
             </button>
           )}
           <button
-            onClick={(e) => handleNotificationToggle(!actualEnableNotification)}
+            onClick={(e) => handleNotificationToggle(!actualMuteNotification)}
             className={`text-sm px-2 py-1 rounded transition-colors ${
-              actualEnableNotification
+              !actualMuteNotification
                 ? "bg-blue-100 hover:bg-blue-200 text-blue-700"
                 : "bg-gray-100 hover:bg-gray-200"
             }`}>

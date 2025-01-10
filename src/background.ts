@@ -17,9 +17,9 @@ function handleError(error: Error) {
 async function checkLiveStatus() {
   console.log("checkLiveStatus")
   try {
-    const enableNotification =
-      (await storage.get<boolean>("enable_notification")) ?? true // 默认为 true
-    if (!enableNotification) return
+    const muteNotification =
+      (await storage.get<boolean>("mute_notification")) ?? false // 默认为 false
+    if (muteNotification) return
 
     const { rooms } = await fetchRoomData()
     const lastStatus = await storage.get<Record<string, boolean>>("last_status")
@@ -54,6 +54,9 @@ async function checkLiveStatus() {
             ? newLiveStreamers[0].roomName
             : newLiveStreamers.map((room) => room.streamerName).join("、")
 
+        // 保存最近开播的主播信息
+        await storage.set("recent_live_streamers", newLiveStreamers)
+
         await chrome.notifications.create("live_notification", {
           type: "basic",
           iconUrl: newLiveStreamers[0].avatar,
@@ -76,14 +79,14 @@ async function checkLiveStatus() {
 async function updateLiveCheck() {
   console.log("updateLiveCheck")
   try {
-    const enableNotification = await storage.get<boolean>("enable_notification")
+    const muteNotification = await storage.get<boolean>("mute_notification")
     const checkIntervalMinutes =
       (await storage.get<number>("check_interval")) || 3 // 默认3分钟
 
     // 清除现有的 alarm
     await chrome.alarms.clear(ALARM_NAME)
-
-    if (enableNotification) {
+    console.log("muteNotification", muteNotification)
+    if (!muteNotification) {
       // 立即执行一次检查
       await checkLiveStatus()
 
@@ -129,19 +132,26 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // 监听存储变化
 chrome.storage.onChanged.addListener((changes) => {
   // 当通知设置或检查间隔改变时更新检查
-  if (changes.enable_notification || changes.check_interval) {
+  if (changes.mute_notification || changes.check_interval) {
     updateLiveCheck().catch(handleError)
   }
 })
 
 // 监听通知点击
-chrome.notifications.onClicked.addListener((notificationId) => {
+chrome.notifications.onClicked.addListener(async (notificationId) => {
   try {
-    chrome.tabs
-      .create({
-        url: `chrome-extension://${chrome.runtime.id}/tabs/index.html`
-      })
-      .catch(handleError)
+    if (notificationId === "live_notification") {
+      const recentStreamers = await storage.get<any[]>("recent_live_streamers")
+      if (recentStreamers && recentStreamers.length === 1) {
+        // 单个主播开播时直接跳转到直播间
+        chrome.tabs.create({ url: recentStreamers[0].url })
+      } else {
+        // 多个主播同时开播时跳转到扩展标签页
+        chrome.tabs.create({
+          url: `chrome-extension://${chrome.runtime.id}/tabs/index.html`
+        })
+      }
+    }
   } catch (error) {
     handleError(error as Error)
   }

@@ -12,8 +12,8 @@ const storage = new Storage({
 })
 
 function IndexOptions() {
-  const [enableNotification, setEnableNotification] = useStorage<boolean>({
-    key: "enable_notification",
+  const [muteNotification, setMuteNotification] = useStorage<boolean>({
+    key: "mute_notification",
     instance: storage
   })
 
@@ -32,7 +32,7 @@ function IndexOptions() {
     instance: storage
   })
 
-  const actualEnableNotification = enableNotification ?? true
+  const actualMuteNotification = muteNotification ?? false
   const actualEnabledPlatforms = enabledPlatforms || ["bilibili", "douyu"]
   const actualCheckInterval = checkInterval || 3 // 默认3分钟
 
@@ -86,8 +86,8 @@ function IndexOptions() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={actualEnableNotification}
-                  onChange={(e) => setEnableNotification(e.target.checked)}
+                  checked={!actualMuteNotification}
+                  onChange={(e) => setMuteNotification(!e.target.checked)}
                   id="enable-notification"
                   className="h-4 w-4 rounded border-gray-300"
                 />
@@ -102,7 +102,7 @@ function IndexOptions() {
               </p>
 
               {/* 添加检查间隔设置 */}
-              {actualEnableNotification && (
+              {!actualMuteNotification && (
                 <div className="mt-4 ml-6">
                   <label className="block text-sm font-medium text-gray-700">
                     检查间隔（分钟）

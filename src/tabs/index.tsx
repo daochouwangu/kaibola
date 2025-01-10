@@ -30,8 +30,8 @@ function TabsPage() {
   })
   const [showHidden, setShowHidden] = useState(false)
   const [loginErrors, setLoginErrors] = useState<NotLoginError[]>([])
-  const [enableNotification, setEnableNotification] = useStorage<boolean>({
-    key: "enable_notification",
+  const [muteNotification, setMuteNotification] = useStorage<boolean>({
+    key: "mute_notification",
     instance: storage
   })
   const [enabledPlatforms, setEnabledPlatforms] = useState<Platform[]>([])
@@ -156,12 +156,12 @@ function TabsPage() {
           </button>
 
           <button
-            onClick={(e) => setEnableNotification((v) => !v)}
+            onClick={(e) => setMuteNotification((v) => !v)}
             className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center gap-2">
             <input
               type="checkbox"
-              checked={enableNotification ?? true}
-              onChange={(e) => setEnableNotification(e.target.checked)}
+              checked={!(muteNotification ?? false)}
+              onChange={(e) => setMuteNotification(!e.target.checked)}
               id="enable-notification-newtab"
               className="cursor-pointer"
               onClick={(e) => e.stopPropagation()}
