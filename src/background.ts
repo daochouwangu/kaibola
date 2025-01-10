@@ -97,6 +97,28 @@ async function updateLiveCheck() {
   }
 }
 
+// 获取 Twitch auth token
+async function getTwitchAuthToken() {
+  try {
+    const urls = ["https://www.twitch.tv", "https://twitch.tv"]
+
+    for (const url of urls) {
+      const cookie = await chrome.cookies.get({
+        url,
+        name: "auth-token"
+      })
+
+      if (cookie) {
+        return cookie.value
+      }
+    }
+    return null
+  } catch (error) {
+    handleError(error as Error)
+    return null
+  }
+}
+
 // 监听 alarm 事件
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM_NAME) {
@@ -126,9 +148,12 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 })
 
 // 监听来自content script的消息
-chrome.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "CLOSE_CURRENT_TAB" && sender.tab) {
     chrome.tabs.remove(sender.tab.id)
+  } else if (message.type === "GET_TWITCH_AUTH") {
+    getTwitchAuthToken().then(sendResponse)
+    return true // 保持消息通道开启，等待异步响应
   }
 })
 

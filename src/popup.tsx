@@ -214,7 +214,7 @@ function IndexPopup() {
         selectedPlatform={selectedPlatform}
         onSelect={setSelectedPlatform}
       />
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 mt-2">
         {visibleRooms.map((item) => (
           <PlainRoom
             isRich={actualIsRich}

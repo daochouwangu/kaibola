@@ -13,7 +13,7 @@ export function PlatformTabs({
   onSelect
 }: PlatformTabsProps) {
   return (
-    <div className="flex gap-2 flex-wrap mb-4">
+    <div className="flex gap-2 flex-wrap">
       {PLATFORM_CONFIGS.filter((config) => platforms.includes(config.id)).map(
         (platform) => (
           <button
@@ -24,8 +24,8 @@ export function PlatformTabs({
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
               ${
                 selectedPlatform === platform.id
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-blue-500 text-white shadow-sm"
+                  : "bg-white text-gray-700 shadow-sm hover:bg-gray-50 border border-gray-200"
               }`}>
             {platform.name}
           </button>

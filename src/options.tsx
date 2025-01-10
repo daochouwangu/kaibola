@@ -32,7 +32,7 @@ function IndexOptions() {
     instance: storage
   })
 
-  const actualEnableNotification = enableNotification || false
+  const actualEnableNotification = enableNotification ?? true
   const actualEnabledPlatforms = enabledPlatforms || ["bilibili", "douyu"]
   const actualCheckInterval = checkInterval || 3 // 默认3分钟
 

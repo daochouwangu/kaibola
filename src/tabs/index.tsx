@@ -38,6 +38,7 @@ function TabsPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
     null
   )
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const addToHidden = async (id: string) => {
     const currentList = (await storage.get<string[]>("hidden_rooms")) || []
@@ -57,6 +58,20 @@ function TabsPage() {
 
   const hiddenRooms = data.filter((room) => hiddenList?.includes(room.roomId))
   const hiddenLiveCount = hiddenRooms.filter((room) => room.isOpen).length
+
+  const refreshData = async () => {
+    if (isRefreshing) return
+    setIsRefreshing(true)
+    try {
+      const { rooms, errors } = await fetchRoomData()
+      setLoginErrors(errors)
+      setData(rooms)
+    } catch (error) {
+      console.error("获取数据失败:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,7 +160,7 @@ function TabsPage() {
             className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center gap-2">
             <input
               type="checkbox"
-              checked={enableNotification}
+              checked={enableNotification ?? true}
               onChange={(e) => setEnableNotification(e.target.checked)}
               id="enable-notification-newtab"
               className="cursor-pointer"
@@ -167,11 +182,34 @@ function TabsPage() {
         </div>
       </div>
 
-      <PlatformTabs
-        platforms={enabledPlatforms}
-        selectedPlatform={selectedPlatform}
-        onSelect={setSelectedPlatform}
-      />
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={refreshData}
+          disabled={isRefreshing}
+          className={`p-1.5 rounded-full bg-white shadow hover:shadow-md transition-shadow ${
+            isRefreshing ? "opacity-50" : ""
+          }`}
+          title="刷新">
+          <svg
+            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
+        <PlatformTabs
+          platforms={enabledPlatforms}
+          selectedPlatform={selectedPlatform}
+          onSelect={setSelectedPlatform}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {openedRooms.map((item) => (
