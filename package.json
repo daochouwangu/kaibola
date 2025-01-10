@@ -31,6 +31,8 @@
   "manifest": {
     "host_permissions": [
       "https://*.twitch.tv/*",
+      "https://twitch.tv/*",
+      "https://www.twitch.tv/*",
       "https://*.bilibili.com/*",
       "https://*.douyu.com/*",
       "https://*.huya.com/*"

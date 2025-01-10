@@ -9,13 +9,36 @@ const storage = new Storage()
 
 async function getAuthToken() {
   try {
-    const cookie = await chrome.cookies.get({
-      url: "https://www.twitch.tv",
-      name: "auth-token"
-    })
-    return cookie ? cookie.value : null
+    console.log("开始获取 Twitch auth token...")
+
+    // 检查 cookies API 是否可用
+    if (!chrome.cookies) {
+      console.error("chrome.cookies API 不可用")
+      return null
+    }
+
+    // 尝试不同的域名组合
+    const urls = ["https://www.twitch.tv", "https://twitch.tv"]
+
+    for (const url of urls) {
+      console.log(`尝试从 ${url} 获取 cookie...`)
+      const cookie = await chrome.cookies.get({
+        url,
+        name: "auth-token"
+      })
+
+      if (cookie) {
+        console.log(`成功从 ${url} 获取 auth token`)
+        return cookie.value
+      }
+    }
+
+    console.log("在所有域名中都未找到 auth-token cookie")
+    return null
   } catch (error) {
     console.error("获取 auth token 失败:", error)
+    // 输出更多调试信息
+    console.log("chrome.runtime.lastError:", chrome.runtime.lastError)
     return null
   }
 }
