@@ -4,16 +4,11 @@ import { fetchRoomData } from "~utils/platforms"
 
 const storage = new Storage()
 
-let checkInterval: NodeJS.Timeout | null = null
+const ALARM_NAME = "checkLiveStatus"
 
 // 添加错误处理函数
 function handleError(error: Error) {
   if (error.message === "Extension context invalidated.") {
-    // 扩展被重载或禁用，清理资源
-    if (checkInterval) {
-      clearInterval(checkInterval)
-      checkInterval = null
-    }
     return
   }
   console.error(error)
@@ -60,22 +55,29 @@ async function updateLiveCheck() {
     const checkIntervalMinutes =
       (await storage.get<number>("check_interval")) || 3 // 默认3分钟
 
-    if (checkInterval) {
-      clearInterval(checkInterval)
-      checkInterval = null
-    }
+    // 清除现有的 alarm
+    await chrome.alarms.clear(ALARM_NAME)
 
     if (enableNotification) {
+      // 立即执行一次检查
       await checkLiveStatus()
-      checkInterval = setInterval(
-        checkLiveStatus,
-        checkIntervalMinutes * 60 * 1000
-      )
+
+      // 创建新的 alarm
+      chrome.alarms.create(ALARM_NAME, {
+        periodInMinutes: checkIntervalMinutes
+      })
     }
   } catch (error) {
     handleError(error as Error)
   }
 }
+
+// 监听 alarm 事件
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === ALARM_NAME) {
+    checkLiveStatus().catch(handleError)
+  }
+})
 
 // 监听存储变化
 chrome.storage.onChanged.addListener((changes) => {
