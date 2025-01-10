@@ -12,11 +12,6 @@ const storage = new Storage({
 })
 
 function IndexOptions() {
-  const [replaceNewTab, setReplaceNewTab] = useStorage<boolean>({
-    key: "replace_new_tab",
-    instance: storage
-  })
-
   const [enableNotification, setEnableNotification] = useStorage<boolean>({
     key: "enable_notification",
     instance: storage
@@ -37,16 +32,9 @@ function IndexOptions() {
     instance: storage
   })
 
-  const actualReplaceNewTab = replaceNewTab || false
   const actualEnableNotification = enableNotification || false
   const actualEnabledPlatforms = enabledPlatforms || ["bilibili", "douyu"]
   const actualCheckInterval = checkInterval || 3 // 默认3分钟
-
-  const handleChange = async (checked: boolean) => {
-    await setReplaceNewTab(checked)
-    // 不再自动重载扩展，只提示用户
-    alert("设置已保存，请手动重启扩展以使更改生效")
-  }
 
   const handleTwitchAuth = () => {
     chrome.tabs.create({
@@ -87,31 +75,6 @@ function IndexOptions() {
                   </label>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="h-px bg-gray-200" />
-
-          {/* 新标签页设置 */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={actualReplaceNewTab}
-                  onChange={(e) => handleChange(e.target.checked)}
-                  id="replace-new-tab"
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                <label
-                  htmlFor="replace-new-tab"
-                  className="font-medium text-gray-900">
-                  将新标签页替换为直播间列表
-                </label>
-              </div>
-              <p className="mt-1 text-sm text-gray-500 ml-6">
-                注意：修改此设置后扩展会自动重新加载以生效
-              </p>
             </div>
           </div>
 

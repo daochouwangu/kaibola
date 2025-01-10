@@ -19,19 +19,6 @@ function handleError(error: Error) {
   console.error(error)
 }
 
-async function updateNewTabOverride() {
-  const replaceNewTab = await storage.get<boolean>("replace_new_tab")
-  try {
-    if (replaceNewTab) {
-      await chrome.tabs.update({
-        url: chrome.runtime.getURL("newtab.html")
-      })
-    }
-  } catch (error) {
-    console.error("更新新标签页设置失败:", error)
-  }
-}
-
 async function checkLiveStatus() {
   console.log("checkLiveStatus")
   try {
@@ -92,9 +79,6 @@ async function updateLiveCheck() {
 
 // 监听存储变化
 chrome.storage.onChanged.addListener((changes) => {
-  if (changes.replace_new_tab) {
-    console.log("新标签页设置已更改")
-  }
   // 当通知设置或检查间隔改变时更新检查
   if (changes.enable_notification || changes.check_interval) {
     updateLiveCheck().catch(handleError)
