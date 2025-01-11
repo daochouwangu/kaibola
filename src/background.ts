@@ -57,13 +57,16 @@ async function checkLiveStatus() {
         // 保存最近开播的主播信息
         await storage.set("recent_live_streamers", newLiveStreamers)
 
-        await chrome.notifications.create("live_notification", {
-          type: "basic",
-          iconUrl: newLiveStreamers[0].avatar,
-          title,
-          message,
-          priority: 2
-        })
+        await chrome.notifications.create(
+          `live_notification_${newLiveStreamers[0].roomId}`,
+          {
+            type: "basic",
+            iconUrl: newLiveStreamers[0].avatar,
+            title,
+            message,
+            priority: 2
+          }
+        )
       } catch (error) {
         handleError(error as Error)
         return
@@ -140,7 +143,7 @@ chrome.storage.onChanged.addListener((changes) => {
 // 监听通知点击
 chrome.notifications.onClicked.addListener(async (notificationId) => {
   try {
-    if (notificationId === "live_notification") {
+    if (notificationId.startsWith("live_notification")) {
       const recentStreamers = await storage.get<any[]>("recent_live_streamers")
       if (recentStreamers && recentStreamers.length === 1) {
         // 单个主播开播时直接跳转到直播间
