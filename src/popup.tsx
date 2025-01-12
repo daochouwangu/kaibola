@@ -47,6 +47,7 @@ function IndexPopup() {
     null
   )
   const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
 
   const hiddenLiveCount = data.filter(
     (room) => room.isOpen && hiddenList?.includes(room.roomId)
@@ -106,9 +107,8 @@ function IndexPopup() {
   }
   const handleNotificationToggle = (value: boolean) => {
     setMuteNotification(!value)
-    if (value) {
-      setShowToast(true)
-    }
+    setToastMessage(value ? "已关闭直播提醒" : "已开启直播提醒")
+    setShowToast(true)
   }
   if (isLoading) {
     return (
@@ -129,7 +129,7 @@ function IndexPopup() {
         />
       ))}
       {showToast && (
-        <Toast message="已开启直播提醒" onClose={() => setShowToast(false)} />
+        <Toast message={toastMessage} onClose={() => setShowToast(false)} />
       )}
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
@@ -148,22 +148,32 @@ function IndexPopup() {
           {hiddenLiveCount > 0 && (
             <button
               onClick={() => setShowHidden(!showHidden)}
-              className={`text-sm px-2 py-1 rounded transition-colors ${
-                showHidden
-                  ? "bg-blue-100 hover:bg-blue-200 text-blue-700"
-                  : "bg-gray-100 hover:bg-gray-200"
+              className={`text-sm px-2 py-1 rounded transition-colors bg-gray-100 hover:bg-gray-200
               }`}>
-              {showHidden ? "正常" : `隐藏(${hiddenLiveCount})`}
+              {showHidden ? "未隐藏" : `已隐藏(${hiddenLiveCount})`}
             </button>
           )}
           <button
-            onClick={(e) => handleNotificationToggle(!actualMuteNotification)}
-            className={`text-sm px-2 py-1 rounded transition-colors ${
-              !actualMuteNotification
-                ? "bg-blue-100 hover:bg-blue-200 text-blue-700"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}>
-            提醒
+            onClick={(e) => handleNotificationToggle(actualMuteNotification)}
+            className={`text-sm p-1.5 rounded transition-colors ${
+              actualMuteNotification
+                ? "bg-gray-100 hover:bg-gray-200"
+                : "bg-blue-100 hover:bg-blue-200"
+            }`}
+            title={actualMuteNotification ? "开启提醒" : "关闭提醒"}>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke={actualMuteNotification ? "currentColor" : "#3B82F6"}
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
           </button>
           <button
             onClick={() => chrome.runtime.openOptionsPage()}
@@ -203,7 +213,7 @@ function IndexPopup() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
               />
             </svg>
           </button>

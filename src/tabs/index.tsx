@@ -39,6 +39,7 @@ function TabsPage() {
     null
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const addToHidden = async (id: string) => {
     const currentList = (await storage.get<string[]>("hidden_rooms")) || []
@@ -102,13 +103,25 @@ function TabsPage() {
     loadPlatforms()
   }, [])
 
-  const openedRooms = data.filter((v) => {
-    const isHidden = hiddenList?.includes(v.roomId)
-    const matchPlatform = selectedPlatform
-      ? v.platform === selectedPlatform
-      : true
-    return v.isOpen && !isHidden && matchPlatform
-  })
+  const openedRooms = data
+    .filter((v) => {
+      const matchPlatform = selectedPlatform
+        ? v.platform === selectedPlatform
+        : true
+      const matchSearch = searchQuery
+        ? v.roomName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          v.streamerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (v.areaName &&
+            v.areaName.toLowerCase().includes(searchQuery.toLowerCase()))
+        : true
+      return v.isOpen && matchPlatform && matchSearch
+    })
+    .sort((a, b) => {
+      const aHidden = hiddenList?.includes(a.roomId) ?? false
+      const bHidden = hiddenList?.includes(b.roomId) ?? false
+      if (aHidden === bHidden) return 0
+      return aHidden ? 1 : -1
+    })
 
   if (isLoading) {
     return (
@@ -157,28 +170,26 @@ function TabsPage() {
 
           <button
             onClick={(e) => setMuteNotification((v) => !v)}
-            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={!(muteNotification ?? false)}
-              onChange={(e) => setMuteNotification(!e.target.checked)}
-              id="enable-notification-newtab"
-              className="cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span>开播提醒</span>
+            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center gap-2"
+            title={muteNotification ? "提醒已关闭" : "提醒已开启"}>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke={muteNotification ? "currentColor" : "#3B82F6"}
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            <span
+              className={muteNotification ? "text-gray-600" : "text-blue-600"}>
+              {muteNotification ? "提醒已关闭" : "提醒已开启"}
+            </span>
           </button>
-
-          {hiddenRooms.length > 0 && (
-            <button
-              onClick={() => setShowHidden(true)}
-              className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-              管理隐藏直播间
-              {hiddenLiveCount > 0 && (
-                <span className="ml-1 text-gray-500">({hiddenLiveCount})</span>
-              )}
-            </button>
-          )}
         </div>
       </div>
 
@@ -209,11 +220,45 @@ function TabsPage() {
           selectedPlatform={selectedPlatform}
           onSelect={setSelectedPlatform}
         />
+        <div className="flex-1" />
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜索直播间/主播/游戏"
+            className="w-64 px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {openedRooms.map((item) => (
-          <RichRoom room={item} key={item.roomId} addToHidden={addToHidden} />
+          <RichRoom
+            room={item}
+            key={item.roomId}
+            addToHidden={addToHidden}
+            hiddenList={hiddenList}
+            onUnhide={removeFromHidden}
+          />
         ))}
       </div>
 

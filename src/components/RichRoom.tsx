@@ -3,6 +3,8 @@ import type { Room } from "~types/Room"
 interface RichRoomProps {
   room: Room
   addToHidden: (id: string) => void
+  hiddenList?: string[]
+  onUnhide?: (id: string) => void
 }
 
 function showTime(n: string) {
@@ -19,10 +21,21 @@ function shortName(n: string, len = 20) {
   return n.length > len ? n.slice(0, len) + "..." : n
 }
 
-export function RichRoom({ room, addToHidden }: RichRoomProps) {
-  const onClickHidden = (e: React.MouseEvent) => {
+export function RichRoom({
+  room,
+  addToHidden,
+  hiddenList = [],
+  onUnhide
+}: RichRoomProps) {
+  const isHidden = hiddenList.includes(room.roomId)
+
+  const onClickButton = (e: React.MouseEvent) => {
     e.stopPropagation()
-    addToHidden(room.roomId)
+    if (isHidden && onUnhide) {
+      onUnhide(room.roomId)
+    } else {
+      addToHidden(room.roomId)
+    }
   }
 
   return (
@@ -75,11 +88,15 @@ export function RichRoom({ room, addToHidden }: RichRoomProps) {
             </div>
           </div>
         </a>
-        {/* 隐藏按钮 - 移到链接外面 */}
+        {/* 隐藏/取消隐藏按钮 */}
         <button
-          onClick={onClickHidden}
-          className="absolute right-3 bottom-3 rounded-full bg-gray-100 px-2 py-0.5 hover:bg-gray-200 text-xs text-gray-500">
-          隐藏
+          onClick={onClickButton}
+          className={`absolute right-3 bottom-3 rounded-full px-2 py-0.5 text-xs ${
+            isHidden
+              ? "bg-blue-50 hover:bg-blue-100 text-blue-600"
+              : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+          }`}>
+          {isHidden ? "取消隐藏" : "隐藏"}
         </button>
       </div>
     </div>
