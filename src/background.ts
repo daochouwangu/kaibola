@@ -15,7 +15,6 @@ function handleError(error: Error) {
 }
 
 async function checkLiveStatus() {
-  console.log("checkLiveStatus")
   try {
     const muteNotification =
       (await storage.get<boolean>("mute_notification")) ?? false // 默认为 false
@@ -57,12 +56,51 @@ async function checkLiveStatus() {
             ? newLiveStreamers[0].roomName
             : newLiveStreamers.map((room) => room.streamerName).join("、")
 
-        // 保存最近开播的主播信息
-        await storage.set("recent_live_streamers", newLiveStreamers)
+        // 获取并更新最近开播主播信息
+        const recentData = await storage.get<{
+          rooms: Record<string, { platform: string; url: string }>
+          timestamp: number
+        }>("recent_live_streamers")
 
-        // 使用时间戳后6位作为唯一标识
-        const timestamp = String(Date.now()).slice(-6)
-        const notificationId = `live_${timestamp}_${newLiveStreamers[0].roomId}`
+        const currentTime = Date.now()
+        // 如果存在未过期的数据（6小时内），则合并
+        const mergedRooms =
+          !recentData || currentTime - recentData.timestamp > 6 * 60 * 60 * 1000
+            ? newLiveStreamers.reduce(
+                (acc, room) => ({
+                  ...acc,
+                  [`${room.platform}_${room.roomId}`]: {
+                    platform: room.platform,
+                    url: room.url
+                  }
+                }),
+                {}
+              )
+            : {
+                ...recentData.rooms,
+                ...newLiveStreamers.reduce(
+                  (acc, room) => ({
+                    ...acc,
+                    [`${room.platform}_${room.roomId}`]: {
+                      platform: room.platform,
+                      url: room.url
+                    }
+                  }),
+                  {}
+                )
+              }
+
+        // 存储合并后的开播主播信息
+        await storage.set("recent_live_streamers", {
+          rooms: mergedRooms,
+          timestamp: currentTime
+        })
+
+        const notificationId =
+          newLiveStreamers.length === 1
+            ? `live_${newLiveStreamers[0].platform}_${newLiveStreamers[0].roomId}`
+            : `live_multiple`
+
         await chrome.notifications.create(notificationId, {
           type: "basic",
           iconUrl: newLiveStreamers[0].avatar,
@@ -81,7 +119,6 @@ async function checkLiveStatus() {
 }
 
 async function updateLiveCheck() {
-  console.log("updateLiveCheck")
   try {
     const muteNotification = await storage.get<boolean>("mute_notification")
     const checkIntervalMinutes =
@@ -89,7 +126,6 @@ async function updateLiveCheck() {
 
     // 清除现有的 alarm
     await chrome.alarms.clear(ALARM_NAME)
-    console.log("muteNotification", muteNotification)
     if (!muteNotification) {
       // 立即执行一次检查
       await checkLiveStatus()
@@ -144,20 +180,82 @@ chrome.storage.onChanged.addListener((changes) => {
 // 监听通知点击
 chrome.notifications.onClicked.addListener(async (notificationId) => {
   try {
-    if (notificationId.startsWith("live_notification")) {
-      const recentStreamers = await storage.get<any[]>("recent_live_streamers")
-      if (recentStreamers && recentStreamers.length === 1) {
-        // 单个主播开播时直接跳转到直播间
-        chrome.tabs.create({ url: recentStreamers[0].url })
+    console.log("通知被点击:", notificationId)
+    if (notificationId.startsWith("live_")) {
+      const recentData = await storage.get<{
+        rooms: Record<string, { platform: string; url: string }>
+        timestamp: number
+      }>("recent_live_streamers")
+
+      console.log("获取到的存储数据:", recentData)
+
+      const currentTime = Date.now()
+      // 检查数据是否存在且未过期（6小时）
+      const isExpired =
+        !recentData || currentTime - recentData.timestamp > 6 * 60 * 60 * 1000
+      console.log("数据是否过期:", isExpired)
+
+      // 插件标签页 URL
+      const extensionTabUrl = `chrome-extension://${chrome.runtime.id}/tabs/index.html`
+
+      if (notificationId === "live_multiple") {
+        console.log("多人开播通知，跳转到标签页")
+        chrome.tabs.create({ url: extensionTabUrl })
       } else {
-        // 多个主播同时开播时跳转到扩展标签页
-        chrome.tabs.create({
-          url: `chrome-extension://${chrome.runtime.id}/tabs/index.html`
-        })
+        // 单个主播开播，从通知ID解析平台和房间ID
+        const parts = notificationId.replace("live_", "").split("_")
+        // 第一个部分是平台，剩余部分组合成房间ID
+        const platform = parts[0]
+        const roomId = parts.slice(1).join("_")
+        const roomKey = `${platform}_${roomId}`
+        console.log("解析的房间信息:", { platform, roomId, roomKey })
+
+        let shouldRedirectToExtension = true
+
+        try {
+          // 如果存储的数据已过期，则重新获取
+          if (isExpired) {
+            console.log("数据已过期，重新获取")
+            const { rooms } = await fetchRoomData()
+            console.log("重新获取的房间数据:", rooms)
+            const room = rooms.find(
+              (r) => r.platform === platform && r.roomId === roomId
+            )
+            console.log("找到的房间:", room)
+            if (room?.url) {
+              console.log("跳转到直播间:", room.url)
+              await chrome.tabs.create({ url: room.url })
+              shouldRedirectToExtension = false
+            }
+          } else {
+            // 使用存储的数据
+            const room = recentData.rooms[roomKey]
+            console.log("从存储中找到的房间:", room)
+            if (room?.url) {
+              console.log("跳转到直播间:", room.url)
+              await chrome.tabs.create({ url: room.url })
+              shouldRedirectToExtension = false
+            }
+          }
+        } catch (error) {
+          console.error("跳转直播间时出错:", error)
+          shouldRedirectToExtension = true
+        }
+
+        // 如果没有找到房间信息，跳转到插件标签页
+        if (shouldRedirectToExtension) {
+          console.log("未找到房间信息或出错，跳转到标签页")
+          chrome.tabs.create({ url: extensionTabUrl })
+        }
       }
     }
   } catch (error) {
+    console.error("处理通知点击时出错:", error)
     handleError(error as Error)
+    // 发生错误时也跳转到插件标签页
+    chrome.tabs.create({
+      url: `chrome-extension://${chrome.runtime.id}/tabs/index.html`
+    })
   }
 })
 
