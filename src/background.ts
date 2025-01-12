@@ -22,24 +22,27 @@ async function checkLiveStatus() {
     if (muteNotification) return
 
     const { rooms } = await fetchRoomData()
-    const lastStatus = await storage.get<Record<string, boolean>>("last_status")
+    const lastStatus =
+      (await storage.get<Record<string, boolean>>("last_status")) || {}
     const hiddenRooms = (await storage.get<string[]>("hidden_rooms")) || []
-    const newStatus: Record<string, boolean> = {}
-    console.log(lastStatus)
+    const newStatus: Record<string, boolean> = { ...lastStatus } // 保留上一次的状态
 
     // 收集新开播的主播
     const newLiveStreamers = []
     for (const room of rooms) {
+      // 更新状态并检查是否需要通知
+      const oldStatus = lastStatus[room.roomId]
       newStatus[room.roomId] = room.isOpen
-      if (
-        lastStatus &&
-        !lastStatus[room.roomId] &&
-        room.isOpen &&
-        !hiddenRooms.includes(room.roomId)
-      ) {
-        newLiveStreamers.push(room)
+
+      if (!oldStatus && room.isOpen) {
+        if (!hiddenRooms.includes(room.roomId)) {
+          newLiveStreamers.push(room)
+        }
       }
     }
+
+    // 先更新状态，避免通知失败导致状态不更新
+    await storage.set("last_status", newStatus)
 
     // 如果有新开播的主播，发送合并通知
     if (newLiveStreamers.length > 0) {
@@ -57,23 +60,21 @@ async function checkLiveStatus() {
         // 保存最近开播的主播信息
         await storage.set("recent_live_streamers", newLiveStreamers)
 
-        await chrome.notifications.create(
-          `live_notification_${newLiveStreamers[0].roomId}`,
-          {
-            type: "basic",
-            iconUrl: newLiveStreamers[0].avatar,
-            title,
-            message,
-            priority: 2
-          }
-        )
+        // 使用时间戳后6位作为唯一标识
+        const timestamp = String(Date.now()).slice(-6)
+        const notificationId = `live_${timestamp}_${newLiveStreamers[0].roomId}`
+        await chrome.notifications.create(notificationId, {
+          type: "basic",
+          iconUrl: newLiveStreamers[0].avatar,
+          title,
+          message,
+          priority: 2
+        })
       } catch (error) {
+        // 通知失败不影响状态更新，只记录错误
         handleError(error as Error)
-        return
       }
     }
-
-    await storage.set("last_status", newStatus)
   } catch (error) {
     handleError(error as Error)
   }
